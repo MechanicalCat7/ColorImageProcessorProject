@@ -1419,28 +1419,19 @@ void CColorImageProcessorDoc::GeometryRotateMaintain(int angle)
 // 회전 - 캔버스 크기 확장
 void CColorImageProcessorDoc::GeometryRotateExpand(int angle)
 {
-	int d1 = abs(angle) % 90;
-	double r1 = RADIAN(d1);
-	double r2 = RADIAN(90 - d1);
+	double r1 = RADIAN(angle);
+	double r2 = RADIAN(90 - angle);
 
 	// 출력 이미지 배열 생성
-	outputHeight = (int)(inputHeight * cos(r1) + inputWidth * cos(r2));
-	outputWidth = (int)(inputHeight * cos(r2) + inputWidth * cos(r1));
+	outputHeight = (int)(inputHeight * abs(cos(r1)) + inputWidth * abs(cos(r2)));
+	outputWidth = (int)(inputHeight * abs(cos(r2)) + inputWidth * abs(cos(r1)));
 	outputImage = Create2DArray(outputHeight, outputWidth, RGB(0, 0, 0));
-
-	// 임시 입력 이미지 생성
-	int th = (outputHeight - inputHeight) / 2;
-	int tw = (outputWidth - inputWidth) / 2;
-	COLORREF** tempInputImage = Create2DArray(outputHeight, outputWidth, RGB(0, 0, 0));
-	for (int ypos = 0; ypos < inputHeight; ++ypos) {
-		for (int xpos = 0; xpos < inputWidth; ++xpos) {
-			tempInputImage[ypos + th][xpos + tw] = inputImage[ypos][xpos];
-		}
-	}
 
 	double rad = angle * 3.141592 / 180.;
 	int cy = outputHeight / 2;
 	int cx = outputWidth / 2;
+	int cy2 = inputHeight / 2;
+	int cx2 = inputWidth / 2;
 
 	// 처리
 	double yd, xd, ys, xs;
@@ -1448,19 +1439,17 @@ void CColorImageProcessorDoc::GeometryRotateExpand(int angle)
 		for (int xpos = 0; xpos < outputWidth; ++xpos) {
 			yd = ypos;
 			xd = xpos;
-			ys = (cos(rad) * (yd - cy) + sin(rad) * (xd - cx)) + cy;
-			xs = (-sin(rad) * (yd - cy) + cos(rad) * (xd - cx)) + cx;
+			ys = (cos(rad) * (yd - cy) + sin(rad) * (xd - cx)) + cy2;
+			xs = (-sin(rad) * (yd - cy) + cos(rad) * (xd - cx)) + cx2;
 
-			if (0 <= ys && ys < outputHeight && 0 <= xs && xs < outputWidth) {
-				outputImage[ypos][xpos] = tempInputImage[(int)ys][(int)xs];
+			if (0 <= ys && ys < inputHeight && 0 <= xs && xs < inputWidth) {
+				outputImage[ypos][xpos] = inputImage[(int)ys][(int)xs];
 			}
 			else {
 				outputImage[ypos][xpos] = RGB(0, 0, 0);
 			}
 		}
 	}
-
-	Delete2DArray(tempInputImage, outputHeight);
 }
 
 // 기하학 처리 - 이동
